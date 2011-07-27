@@ -1,0 +1,35 @@
+# DEFAULT CACHE REGION   
+
+jcs.default=DC
+jcs.default.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.default.cacheattributes.MaxObjects=1000000
+jcs.default.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
+
+# System CACHE REGION   
+jcs.system.groupIdCache=DC
+jcs.system.groupIdCache.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.system.groupIdCache.cacheattributes.MaxObjects=10000000
+jcs.system.groupIdCache.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
+
+# PRE-DEFINED CACHE REGIONS   
+
+#jcs.region.testCache1=DC
+#jcs.region.testCache1.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+#jcs.region.testCache1.cacheattributes.MaxObjects=1000
+#jcs.region.testCache1.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
+#jcs.region.testCache1.cacheattributes.UseMemoryShrinker=true
+#jcs.region.testCache1.cacheattributes.MaxMemoryIdleTimeSeconds=3600
+#jcs.region.testCache1.cacheattributes.ShrinkerIntervalSeconds=60
+
+# AVAILABLE AUXILIARY CACHES   
+#jcs.auxiliary.DC=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory
+#jcs.auxiliary.DC.attributes=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes
+#jcs.auxiliary.DC.attributes.DiskPath=g:/dev/jakarta-turbine-stratum/raf
+#jcs.auxiliary.DC.attributes.maxKeySize=100000
+
+#jcs.auxiliary.LTCP=org.apache.jcs.auxiliary.lateral.LateralCacheFactory
+#jcs.auxiliary.LTCP.attributes=org.apache.jcs.auxiliary.lateral.LateralCacheAttributes
+#jcs.auxiliary.LTCP.attributes.TransmissionTypeName=TCP
+#jcs.auxiliary.LTCP.attributes.TcpServers=localhost:1111
+#jcs.auxiliary.LTCP.attributes.TcpListenerPort=1110
+#jcs.auxiliary.LTCP.attributes.PutOnlyMode=false

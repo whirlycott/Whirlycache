@@ -1,0 +1,12 @@
+Whirlycache Changes
+
+-------------------------------------------------
+Release 0.7.1
+-------------------------------------------------
+This is mainly a bugfix release.  We've fixed the Store implementation 
+so that Cocoon users will have better luck using Cocoon and Whirlycache.  
+Thanks to Eric Meyer, Peter Royal, and Gregor Rothfuss for assistance.
+
+Peter Royal also found a bug in remove(), whereby an internal housekeeping 
+object was returned instead of the object originally placed in the 
+cache.

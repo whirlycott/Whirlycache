@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Whirlycache</title>
+</head>
+
+<body>
+<h1>Whirlycache</h1>
+<p>
+	<ul>
+	<li>May 10th, 2006 - Whirlycache 1.0.1 released (small build problem)
+	<li>May 9th, 2006 - Whirlycache 1.0 released! (<a href="/nonav/api/">Javadoc available</a>)</li>
+	<li>Apr. 15th, 2005 - Whirlycache 0.7.1 released!
+	<li>Feb. 24th, 2005 - Whirlycache 0.7.0 released! 
+	<li>Dec. 22nd, 2004 - Whirlycache 0.6.5 Javadoc posted</li>
+	<li>Dec. 20th, 2004 - Whirlycache 0.6.5 released!</li>
+	<li>Oct. 7th, 2004 - Whirlycache covered on <a href="http://www.theserverside.com/news/thread.tss?thread_id=29290">The Server Side</a></li>
+	<li>Oct. 4th, 2004 - Whirlycache 0.6 released!</li>
+	</ul>
+</p>
+<p>Whirlycache is a fast, configurable in-memory object cache for Java. It can be used, for example, to speed up a website or an application by caching objects that would otherwise have to be created by querying a database or by another expensive procedure. From the testing that we have done, it appears to be faster than any other Java cache that we have been able to inspect. </p>
+
+
+<h3>Download</h3>
+<p>Download the latest release:
+	<a href="downloads/whirlycache-1.0.1.zip">whirlycache-1.0.1.zip</a>
+	 You are <strong>strongly</strong> encouraged to sign up for our low-volume <a href="https://whirlycache.dev.java.net/servlets/ProjectMailingListList">'announce' mailing list</a> so that you can be made aware of new releases. </p>
+
+
+<h3>Quick Start </h3>
+<p>For the impatient, here's how to get started using Whirlycache. You will first need to provide a <a href="sample-whirlycache-xml-file.html">whirlycache.xml file</a> in your classpath as well though. 
+</p>
+<pre>
+//Use the cache manager to create the default cache
+Cache c = CacheManager.getInstance().getCache();
+
+//Put an object into the cache
+c.store(&quot;yourKeyName&quot;, new WhateverObject());
+
+//Get the object back out of the cache
+WhateverObject o = (WhateverObject) c.retrieve(&quot;yourKeyName&quot;);
+
+//Shut down the cache manager
+CacheManager.getInstance().shutdown();
+</pre>
+<p>As you can see, this is straightforward. You can have many named caches or you can just use the default cache.</p>
+
+<p>
+If you are using Cocoon and want to use Whirlycache as the Store implementation, 
+you should read the <a href="cocoon-howto.html">Whirlycache+Cocoon Howto</a>.
+</p>
+
+<h3>Benchmarks</h3>
+<p>As a caveat, I join you in that bubbling surge of skepticism that you may be feeling right about now.  Benchmarks are 
+almost always inherently flawed or narrow in scope.  This benchmark is no different.  If you would like more info about 
+it, please check out the CVS source tree and investigate further.  Errors will be taken seriously by the Whirlycache 
+dev team.  The purpose of providing this data is to encourage you to download Whirlycache and try it out and 
+make your own judgements.  In fairness, I should also note that some of the other cache implementations have 
+features that Whirlycache does not currently have; this may be important to you.</p>
+
+<img src="whirlycache-results.png" width="500" height="500"/>
+
+<p>The benchmark shows the amount of time (in milliseconds) for several popular java caches to do the following:
+<pre>
+Create a cache
+Then, do this 50 times:
+	Store 50,000 elements into the cache
+	Then, with 20 concurrent threads:
+		50% of the time, read data from the cache
+		25% of the time, remove data from the cache
+		25% of the time, put data into the cache
+</pre>
+
+Percentages are approximate.  Keys and values are very simple, short java.lang.String objects.
+
+</p>
+
+<h3>Design</h3>
+
+<p>Whirlycache is built around several design principles that differ from other cache implementations:</p>
+
+<ol>
+  <li>Require synchronization as infrequently as possible</li>
+  <li>Do as little as possible in the insertion and retrieval operations</li>
+  <li>Soft limits are acceptable for many applications</li>
+  <li>Disk overflow becomes a bad idea very quickly</li>
+</ol>
+
+<p>Many attributes of Whirlycache are configurable in an XML file, but the most important components of the cache are the <strong>Backend</strong>, the <strong>Tuner</strong>, and the <strong>Policy</strong>. </p>
+<p>We support pluggable backend implementations that need to implement the ManagedCache interface (which is a subinterface of java.util.Map, although not all the methods of Map need to be implemented). We currently support two backends: ConcurrentHashMap and FastHashMap. You can decide which one suits your application best. In our testing, it's hard to tell which one comes out on top all of the time. If you need to, you can even implement your own backed by implementing the ManagedCache interface. </p>
+<p>The Tuner is a background thread that performs cache maintenance activites  specified in the configured Policy implementation. One Tuner thread per cache is created and it is configured to run every <em>n</em> seconds. It depends on your application, but you definitely don't want to run the Tuner too often since it will only serve to burden the system unnecessarily. If your data doesn't change a lot, you could simply configure it to run every few minutes.</p>
+<p>The purpose of the Tuner is to perform activities that would otherwise be performed by the insertion and retrieval operations (which we want to keep  very lean and fast). The Tuner expires elements from the cache based on the configured Policy and the configured maxsize of the cache. Please keep in mind that the maxsize value is a softlimit that can be exceeded in between Tuner runs (remember that these only run every <em>n</em> seconds). When the Tuner thread runs, it will prune the cache down to the maxsize according to the rules of the Policy. </p>
+<p>This last point is particularily relevant to those who may be inserting  large objects into Whirlycache. For example, if you decide to cache 10Mb PDF files in memory, be sure that your Cache has an appropriately configured max-size and that you run the Tuner frequently enough to account for any activity that could result in something potentially disastrous such as ninety 10Mb files being inserted all of a sudden. If you don't have enough memory allocated to your JVM, you will inevitably get an exception complaining about a lack of memory! The max-size declaration in the whirlycache.xml file tells the configured Policy class to trim the Cache to <em>n</em> elements every time it runs. There is nothing to prevent you from successfully inserting <em>n</em>+1 objects into the cache. It will work, assuming you don't run out of memory. </p>
+<p>The Policy defines the set of rules for removing elements from a cache. You can specify a different Policy implementation per named cache in the whirlycache.xml configuration file. Currently, we offer FIFO, LFU and LRU. </p>
+<h3>Configuration and Installation </h3>
+<p>To use Whirlycache, simply download the latest distribution and unzip it.  Then, copy all of the supplied jar files in your classpath. Finally, you will need to supply a whirlycache.xml file in your classpath as well. You need to properly configure the whirlycache.xml file according to your needs, but we have supplied you with reasonable default values that you can change later if you need to. </p>
+<p>Here is a <a href="sample-whirlycache-xml-file.html">sample whirlycache.xml</a> configuration file. </p>
+
+<h3>Support and Mailing Lists</h3>
+We have a few <a href="https://whirlycache.dev.java.net/servlets/ProjectMailingListList">mailing lists</a> set up.  At minimum, please subscribe to the 'announce' list so you can be aware of updates to this software.
+<p>&nbsp;</p>
+</body>
+</html>

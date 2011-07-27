@@ -1,0 +1,208 @@
+<!--
+Copyright 2004 		Philip Jacob <phil@whirlycott.com>
+				  	Seth Fitzsimmons <seth@note.amherst.edu>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<project name="Whirlycache" default="jar">
+    <!-- Java compilation options -->
+    <property name="compile.debug" value="false" />
+    <property name="compile.deprecation" value="true" />
+    <property name="compile.optimize" value="true" />
+
+    <!-- Doc directory and packages that go in there -->
+    <property name="doc.dir" value="./doc"/>
+
+    <!-- where all the library files are kept, plus what to include/exclude when building -->
+    <property name="lib.dir" value="./lib" />
+    <property name="lib.core" value="${lib.dir}/core" />
+    <property name="lib.build" value="nodistrib/lib/" />
+
+    <!-- application information -->
+    <property name="app.name" value="whirlycache" />
+    <property name="app.version" value="2.0" />
+
+    <!-- The base directory for distribution targets -->
+    <property name="dist.dir" value="./dist" />
+
+    <property name="src.dir" value="src" />
+    <property name="src.java" value="${src.dir}/java" />
+	<property name="src.java.test" value="test/src/java"/>
+
+    <property name="build.dir" value="build" />
+    <property name="build.target" value="${build.dir}/target" />
+
+    <property name="javadoc.packages" value="com.whirlycott.cache.*" />
+
+    <!-- The name of the web application archive file to be produced -->
+    <property name="app.jar" value="${app.name}-${app.version}.jar" />
+	<property name="release.zip" value="${app.name}-${app.version}.zip" />
+
+    <path id="base.classpath">
+        <fileset dir="lib">
+                <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="nodistrib/lib">
+                <include name="**/*.jar"/>
+        </fileset>
+        <pathelement location="${build.target}"/>
+    </path>
+	
+	<path id="lib.classpath">
+        <fileset dir="lib">
+                <include name="**/*.jar"/>
+        </fileset>
+	</path>
+	
+	<path id="testlib.classpath">
+        <fileset dir="test/lib">
+                <include name="**/*.jar"/>
+        </fileset>
+	</path>
+	
+	<path id="libnodistrib.classpath">
+        <fileset dir="nodistrib/lib">
+                <include name="**/*.jar"/>
+        </fileset>
+	</path>
+	
+    <path id="test.classpath">
+    	<pathelement location="${build.target}"/>
+		<fileset dir="test/config">
+			<include name="*"/>
+		</fileset>
+    </path>
+
+    <target name="init">
+        <echo    message="Processing build.target init ${app.name}"/>
+        <available file="${src.java}"   property="src.java.present"/>
+        <available file="${lib.dir}"    property="lib.dir.present"/>
+    </target>
+
+    <target name="clean"
+        description="Clean build and distribution directories">
+        <echo    message="Processing build.target clean ${app.name}"/>
+        <delete   dir="${build.dir}" />
+        <delete   dir="${dist.dir}" />
+    </target>
+
+    <target name="prepare" depends="init, clean"
+        description="Prepare target directory">
+        <echo    message="Processing app ${app.name}"/>
+        <mkdir   dir="${build.dir}" />
+        <mkdir   dir="${build.target}" />
+        <mkdir   dir="${dist.dir}" />
+    </target>
+
+     <target name="release" depends="clean, jar, javadoc"
+             description="Creates a release">
+        <echo message="Creating ${app.version} release" />
+
+        <zip destfile="${release.zip}" 
+            compress="true">
+            <zipfileset dir="${src.dir}" prefix="${app.name}-${app.version}/src" />
+            <zipfileset dir="${doc.dir}" prefix="${app.name}-${app.version}/doc" />
+            <zipfileset dir="${lib.dir}" prefix="${app.name}-${app.version}/lib" />
+            <zipfileset dir="${dist.dir}" prefix="${app.name}-${app.version}/dist" />
+        </zip>
+    </target>
+
+    <target name="compile" depends="prepare" description="Compile Java sources">
+    	<echo    message="Processing app ${app.name}"/>
+        <echo    message="Source ${src.java}"/>
+        <echo    message="Target ${build.target}"/>
+        <javac  srcdir="${src.java}" 
+            destdir="${build.target}"
+            debug="${compile.debug}"
+            deprecation="${compile.deprecation}" 
+        	source="1.5"
+            optimize="${compile.optimize}">
+            <classpath refid="base.classpath" />
+        	<classpath refid="lib.classpath"/>
+        	<classpath refid="libnodistrib.classpath"/>
+        	<classpath refid="testlib.classpath" />
+        </javac>
+        <copy    todir="${build.target}">
+            <fileset dir="${src.java}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+	
+    <target name="compile.test" depends="prepare, compile" description="Compile Java sources for test code">
+    	<echo    message="Processing app ${app.name}"/>
+        <echo    message="Source ${src.java}"/>
+        <echo    message="Target ${build.target}"/>
+        <javac  srcdir="${src.java.test}"
+            destdir="${build.target}"
+            debug="${compile.debug}"
+            deprecation="${compile.deprecation}"
+        	source="1.5"
+            optimize="${compile.optimize}">
+            <classpath refid="base.classpath" />
+        	<classpath refid="test.classpath" />
+           	<classpath refid="lib.classpath"/>
+        	<classpath refid="testlib.classpath" />
+           	<classpath refid="libnodistrib.classpath"/>
+        </javac>
+        <copy    todir="${build.target}">
+            <fileset dir="${src.java.test}">
+                <exclude name="**/*.java"/>
+            </fileset>
+    		<fileset dir="test/config">
+    			<include name="*"/>
+    		</fileset>
+        </copy>
+    </target>
+
+    <target name="javadoc" depends="init" description="Builds the javadoc for the project.">
+        <mkdir dir="${doc.dir}/api"/>
+        <delete includeEmptyDirs="true" >
+            <fileset dir="${doc.dir}/api"/>
+        </delete>
+        <mkdir dir="${doc.dir}/api"/>
+        <javadoc packagenames="${javadoc.packages}"
+            sourcepath="${src.java}"
+            destdir="${doc.dir}/api"
+            author="true"
+            version="true"
+            private="false"
+            doctitle="${app.name} Version ${app.version}">
+            <classpath refid="base.classpath" />
+        </javadoc>
+    </target>
+
+    <target name="jar" depends="compile"
+        description="Create jar">
+        <echo message="Processing jarfile ${app.name}"/>
+        <jar jarfile="${dist.dir}/${app.jar}"
+             basedir="${build.target}" >
+        	<exclude name="**/*.html"/>
+    	</jar>
+    </target>
+	
+	<target name="benchmark" depends="init, jar, compile.test"
+		description="Runs the benchmarks" >
+		<java classname="com.whirlycott.cache.benchmarks.BenchmarkRunner"
+			fork="yes"  failonerror="true">
+				<jvmarg value="-Xmx400M"/>
+				<classpath location="${dist.dir}/${app.jar}" />
+				<classpath refid="test.classpath" />
+				<classpath refid="testlib.classpath" />
+				<classpath refid="lib.classpath" />
+				<classpath refid="libnodistrib.classpath"/>
+		</java>
+	</target>
+
+</project>

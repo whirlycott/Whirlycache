@@ -1,0 +1,57 @@
+<style type="text/css">
+<!--
+.style1 {font-family: "Courier New", Courier, mono}
+-->
+</style>
+ <h1>Whirlycache + Cocoon How-To </h1>
+<p>Thanks to Eric Meyer at <a href="http://www.quoininc.com/">Quoin</a> for this document describing how to get Whirlycache to work with <a href="http://cocoon.apache.org/">Cocoon</a>. </p>
+<p>Get the latest (at least 0.7.1) release of <a href="http://whirlycache.dev.java.net/">Whirlycache</a>.  Put <span class="style1">whirlycache.jar</span> and the necessary supporting jars  into your <span class="style1">WEB-INF/classes/lib</span> directory. Extract <span class="style1">/WEB-INF/classes/org/apache/cocoon/cocoon.roles</span> from the <span class="style1">cocoon.jar</span> and modify it to replace both caches with Whirlycache, and remove the store janitor: </p>
+<pre>&lt;role default-class="com.whirlycott.cache.component.store.WhirlycacheStore" name="org.apache.excalibur.store.Store" shorthand="store"/&gt;
+&lt;role default-class="com.whirlycott.cache.component.store.WhirlycacheStore" name="org.apache.excalibur.store.Store/TransientStore" shorthand="transient-store"/&gt;
+&lt;!-- NO store janitor 
+&lt;role default-class="org.apache.excalibur.store.impl.StoreJanitorImpl" name="org.apache.excalibur.store.StoreJanitor" shorthand="store-janitor"/&gt; 
+--&gt; </pre>
+<p>Set the Whirlycache configuration parameters in your <span class="style1">cocoon.xconf</span> file, and remove the <span class="style1">store-janitor</span> entry. </p>
+<pre> &nbsp;&lt;!--+ 
+ &nbsp;&nbsp;&nbsp;&nbsp; | Transient Store: holds objects that don't have to survive shutdown 
+ &nbsp;&nbsp;&nbsp;&nbsp; | 
+ &nbsp;&nbsp;&nbsp;&nbsp; | Common configuration parameters: 
+ &nbsp;&nbsp;&nbsp;&nbsp; | maxobjects: Indicates how many objects will be hold in the cache. 
+ &nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; When the number of maxobjects has been reached. The last object 
+ &nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; in the cache will be thrown out. 
+ &nbsp;&nbsp;&nbsp;&nbsp; +--&gt; 
+ &nbsp;&lt;transient-store logger="core.store.transient"&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;backend&gt;com.whirlycott.cache.impl.ConcurrentHashMapImpl&lt;/backend&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;tuner-sleeptime&gt;10&lt;/tuner-sleeptime&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &lt;!-- evicts oldest items when pruning --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- &lt;policy&gt;com.whirlycott.cache.policy.FIFOMaintenancePolicy&lt;/policy&gt; --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- evicts least recently used items when pruning --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- &lt;policy&gt;com.whirlycott.cache.policy.LRUMaintenancePolicy&lt;/policy&gt; --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- evicts least frequently used items when pruning --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;policy&gt;com.whirlycott.cache.policy.LFUMaintenancePolicy&lt;/policy&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&lt;maxsize&gt;10000&lt;/maxsize&gt; 
+ &nbsp;&lt;/transient-store&gt; 
+   
+ &nbsp;&lt;!--+ 
+ &nbsp;&nbsp;&nbsp;&nbsp; | Store: generic store. The default implementation is an in-memory store 
+ &nbsp;&nbsp;&nbsp;&nbsp; | backed by a disk store (based on JCS). This forms a two-stage 
+ &nbsp;&nbsp;&nbsp;&nbsp; | cache composed of a fast in-memory MRU front-end and a persistent 
+ &nbsp;&nbsp;&nbsp;&nbsp; | back-end which stores the less-used objects. 
+ &nbsp;&nbsp;&nbsp;&nbsp; | 
+ &nbsp;&nbsp;&nbsp;&nbsp; | Common configuration parameters: 
+ &nbsp;&nbsp;&nbsp;&nbsp; | maxobjects: Indicates how many objects will be held in the cache. 
+ &nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; When the number of maxobjects has been reached. The last object 
+ &nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; in the cache will be thrown out. 
+ &nbsp;&nbsp;&nbsp;&nbsp; +--&gt; 
+ &nbsp;&lt;store logger="core.store"&gt; 
+ &nbsp;&nbsp; &lt;parameter name="use-cache-directory" value="true"/&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;backend&gt;com.whirlycott.cache.impl.ConcurrentHashMapImpl&lt;/backend&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;tuner-sleeptime&gt;10&lt;/tuner-sleeptime&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&lt;!-- evicts oldest items when pruning --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- &lt;policy&gt;com.whirlycott.cache.policy.FIFOMaintenancePolicy&lt;/policy&gt; --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- evicts least recently used items when pruning --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- &lt;policy&gt;com.whirlycott.cache.policy.LRUMaintenancePolicy&lt;/policy&gt; --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;!-- evicts least frequently used items when pruning --&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;policy&gt;com.whirlycott.cache.policy.LFUMaintenancePolicy&lt;/policy&gt; 
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&lt;maxsize&gt;10000&lt;/maxsize&gt; 
+ &nbsp;&lt;/store&gt; </pre>
