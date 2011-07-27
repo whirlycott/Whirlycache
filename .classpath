@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="src" path="test/config"/>
+	<classpathentry kind="src" path="test/src/java"/>
+	<classpathentry kind="lib" path="lib/commons-collections-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/junit-3.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.8.jar"/>
+	<classpathentry kind="lib" path="nodistrib/lib/avalon-framework-4.1.5.jar"/>
+	<classpathentry kind="lib" path="nodistrib/lib/excalibur-store-1.0.jar"/>
+	<classpathentry kind="lib" path="nodistrib/lib/hibernate2.jar"/>
+	<classpathentry kind="lib" path="nodistrib/lib/servlet-api.jar"/>
+	<classpathentry kind="lib" path="test/lib/commons-lang-2.0.jar"/>
+	<classpathentry kind="lib" path="test/lib/ehcache-0.8.jar"/>
+	<classpathentry kind="lib" path="test/lib/jboss-aop.jar"/>
+	<classpathentry kind="lib" path="test/lib/jboss-cache.jar"/>
+	<classpathentry kind="lib" path="test/lib/jboss-common.jar"/>
+	<classpathentry kind="lib" path="test/lib/jboss-j2ee.jar"/>
+	<classpathentry kind="lib" path="test/lib/jboss-jmx.jar"/>
+	<classpathentry kind="lib" path="test/lib/jboss-system.jar"/>
+	<classpathentry kind="lib" path="test/lib/jcommon-0.9.6.jar"/>
+	<classpathentry kind="lib" path="test/lib/jcs-1.1-dev.jar"/>
+	<classpathentry kind="lib" path="test/lib/jdbc2_0-stdext.jar"/>
+	<classpathentry kind="lib" path="test/lib/jfreechart-0.9.21.jar"/>
+	<classpathentry kind="lib" path="test/lib/jgroups.jar"/>
+	<classpathentry kind="lib" path="test/lib/mysql-connector-java-3.0.11-stable-bin.jar"/>
+	<classpathentry kind="lib" path="test/lib/oscache-2.0.2-22Jan04.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
