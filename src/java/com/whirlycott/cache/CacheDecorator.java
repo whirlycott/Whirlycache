@@ -1,13 +1,13 @@
 /*
  Copyright 2004 		Philip Jacob <phil@whirlycott.com>
  Seth Fitzsimmons <seth@note.amherst.edu>
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import com.whirlycott.cache.policy.ExpirationTimePredicate;
  * Owns the cache tuning thread and provides housekeeping facilities for
  * ManagedCache implementations. One CacheDecorator is created for each Cache
  * named in the whirlycache.xml configuration file.
- * 
+ *
  * @author Phil Jacob
  */
 public class CacheDecorator implements Runnable, Cache {
@@ -86,16 +86,16 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/**
 	 * Constructor for a CacheDecorator.
-	 * 
+	 *
 	 * @param _managedCache
 	 * @param _configuration
 	 * @param policies
 	 */
 	public CacheDecorator(final ManagedCache _managedCache, final CacheConfiguration _configuration, final CacheMaintenancePolicy[] policies) {
 
-		name = _configuration.getName();
+		this.name = _configuration.getName();
 
-		if (null == name) {
+		if (null == this.name) {
 			throw new IllegalArgumentException(Messages.getString("CacheDecorator.cache_config_cannot_be_null")); //$NON-NLS-1$
 		}
 
@@ -111,24 +111,24 @@ public class CacheDecorator implements Runnable, Cache {
 			throw new IllegalArgumentException(Messages.getString("CacheDecorator.must_provide_single_policy")); //$NON-NLS-1$
 		}
 
-		policy = policies[0];
+		this.policy = policies[0];
 
 		// Adaptive size plus the buffer (to prevent
 		// ArrayIndexOutOfBoundsExceptions)s
-		adaptiveResults = new int[adaptiveMemorySize + adaptiveMemorySizeOverflow];
+		this.adaptiveResults = new int[this.adaptiveMemorySize + this.adaptiveMemorySizeOverflow];
 
 		// This is the cache which we are managing.
-		managedCache = _managedCache;
+		this.managedCache = _managedCache;
 
 		// Do some configuration.
 		configure(_configuration);
 
 		// Start up the management thread.
-		tunerThread = new Thread(this);
-		final Object[] args = { name };
-		tunerThread.setName(Messages.getCompoundString("CacheDecorator.whirlycache_tuner", args)); //$NON-NLS-1$
-		tunerThread.setDaemon(true);
-		tunerThread.start();
+		this.tunerThread = new Thread(this);
+		final Object[] args = { this.name };
+		this.tunerThread.setName(Messages.getCompoundString("CacheDecorator.whirlycache_tuner", args)); //$NON-NLS-1$
+		this.tunerThread.setDaemon(true);
+		this.tunerThread.start();
 	}
 
 	/**
@@ -136,8 +136,8 @@ public class CacheDecorator implements Runnable, Cache {
 	 */
 	public void clear() {
 		log.info(Messages.getString("CacheDecorator.clearing_cache")); //$NON-NLS-1$
-		managedCache.clear();
-		Arrays.fill(adaptiveResults, 0);
+		this.managedCache.clear();
+		Arrays.fill(this.adaptiveResults, 0);
 	}
 
 	/**
@@ -155,20 +155,20 @@ public class CacheDecorator implements Runnable, Cache {
 	 * Looks at the last 'n' queries to determine whether the Cache should turn
 	 * on optimizations for a mostly-read environment (if the underlying
 	 * implementation of ManagedCache supports this).
-	 * 
+	 *
 	 * @param _value
 	 *            varies depending on whether this was a read, write, or
 	 *            removal.
 	 */
 	protected void doAdaptiveAccounting(final int _value) {
 		// We only care about the last 'n' adaptiveResults.
-		final int currentCounter = adaptiveResultCounter;
-		if (currentCounter >= adaptiveMemorySize) {
-			adaptiveResultCounter = 0;
-			adaptiveResults[0] = _value;
+		final int currentCounter = this.adaptiveResultCounter;
+		if (currentCounter >= this.adaptiveMemorySize) {
+			this.adaptiveResultCounter = 0;
+			this.adaptiveResults[0] = _value;
 		} else {
-			adaptiveResults[currentCounter] = _value;
-			adaptiveResultCounter++;
+			this.adaptiveResults[currentCounter] = _value;
+			this.adaptiveResultCounter++;
 		}
 	}
 
@@ -176,17 +176,17 @@ public class CacheDecorator implements Runnable, Cache {
 	 * @return Returns the adaptiveMemorySize.
 	 */
 	protected int getAdaptiveMemorySize() {
-		return adaptiveMemorySize;
+		return this.adaptiveMemorySize;
 	}
 
 	/**
 	 * Calculates the adaptive hit rate for this cache.
-	 * 
+	 *
 	 * @return adaptive hit ratio.
 	 */
 	public float getAdaptiveRatio() {
-		final int copy[] = new int[adaptiveMemorySize];
-		System.arraycopy(adaptiveResults, 0, copy, 0, adaptiveMemorySize);
+		final int copy[] = new int[this.adaptiveMemorySize];
+		System.arraycopy(this.adaptiveResults, 0, copy, 0, this.adaptiveMemorySize);
 		int positives = 0;
 		for (final int element : copy) {
 			if (element == 1) {
@@ -195,16 +195,16 @@ public class CacheDecorator implements Runnable, Cache {
 		}
 		// log.info("Positives: " + positives + "; Total: " +
 		// adaptiveMemorySize);
-		return new Float(positives).floatValue() / new Float(adaptiveMemorySize).floatValue();
+		return new Float(positives).floatValue() / new Float(this.adaptiveMemorySize).floatValue();
 	}
 
 	/**
 	 * Returns an efficiency report string for this cache.
-	 * 
+	 *
 	 * @return efficiency report for this cache.
 	 */
 	public String getEfficiencyReport() {
-		final Object[] args = { new Integer(managedCache.size()), new Long(recordKeeper.getTotalOperations()), new Long(recordKeeper.getHits()), new Float(getAdaptiveRatio()),
+		final Object[] args = { new Integer(this.managedCache.size()), new Long(this.recordKeeper.getTotalOperations()), new Long(this.recordKeeper.getHits()), new Float(getAdaptiveRatio()),
 				new Float(getTotalHitrate())
 
 		};
@@ -212,40 +212,62 @@ public class CacheDecorator implements Runnable, Cache {
 	}
 
 	/**
+	 * @return The total number of hits
+	 */
+	public long getHits() {
+		return recordKeeper.getHits();
+	}
+	
+	
+	/**
+	 * @return The total number of misses
+	 */
+	public long getMisses() {
+		return recordKeeper.getMisses();
+	}
+	
+	/**
+	 * @return The total number of operations on the cache
+	 */
+	public long getTotalOperations() {
+		return this.recordKeeper.getTotalOperations();
+	}
+
+	/**
 	 * Get the maximum size of the cache.
-	 * 
+	 *
 	 * @return Returns the maxSize.
 	 */
 	protected int getMaxSize() {
-		return maxSize;
+		return this.maxSize;
 	}
 
 	/**
 	 * @return Returns the policy in use for managing this cache.
 	 */
 	protected CacheMaintenancePolicy getPolicy() {
-		return policy;
+		return this.policy;
 	}
 
 	/**
 	 * @return Returns the sleepTime.
 	 */
 	protected long getSleepTime() {
-		return sleepTime;
+		return this.sleepTime;
 	}
 
 	/**
 	 * Returns the total hitrate since this Cache was started.
-	 * 
+	 *
 	 * @return Total hitrate.
 	 */
-	protected float getTotalHitrate() {
-		return new Long(recordKeeper.getHits()).floatValue() / new Long(recordKeeper.getTotalOperations()).floatValue();
+	public float getTotalHitrate() {
+		return Long.valueOf(this.recordKeeper.getHits()).floatValue() / Long.valueOf(this.recordKeeper.getTotalOperations()).floatValue();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.whirlycott.cache.Cache#remove(com.whirlycott.cache.Cacheable)
 	 */
 	public Object remove(final Cacheable _key) {
@@ -256,7 +278,7 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/**
 	 * Removes an Object from the Cache and returns the removed Object.
-	 * 
+	 *
 	 * @param _key
 	 *            key associated with object to remove.
 	 */
@@ -266,17 +288,17 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/**
 	 * An internal remove operation.
-	 * 
+	 *
 	 * @param _key
 	 * @return the object that was removed
 	 */
 	protected Object internalRemove(final Object _key) {
 		if (Constants.BUILD_STATS_ENABLED) {
-			recordKeeper.incrementTotalOperations();
+			this.recordKeeper.incrementTotalOperations();
 		}
 
 		if (_key != null) {
-			final Item cachedItem = (Item) managedCache.remove(_key);
+			final Item cachedItem = (Item) this.managedCache.remove(_key);
 
 			// The compiler will optimize this.
 			if (Constants.BUILD_STATS_ENABLED) {
@@ -291,7 +313,7 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.whirlycott.cache.Cache#retrieve(com.whirlycott.cache.Cacheable)
 	 */
 	public Object retrieve(final Cacheable _key) {
@@ -306,28 +328,34 @@ public class CacheDecorator implements Runnable, Cache {
 			doAdaptiveAccounting(1);
 
 			// Increment the number of totalQuestions.
-			recordKeeper.incrementTotalOperations();
+			this.recordKeeper.incrementTotalOperations();
 		}
 
 		// Set up the return value
-		final Item cachedItem = (Item) managedCache.get(_key);
+		final Item cachedItem = (Item) this.managedCache.get(_key);
 		if (cachedItem != null) {
 
 			// Bump the numbers.
 			if (Constants.BUILD_STATS_ENABLED) {
-				cachedItem.setUsed(recordKeeper.getTotalOperations());
+				cachedItem.setUsed(this.recordKeeper.getTotalOperations());
 				cachedItem.incrementCount();
 			}
 
 			// Increment the adaptive algorithm and the hitcounter.
 			final Object retval = cachedItem.getItem();
-			if (retval != null && Constants.BUILD_STATS_ENABLED) {
-				recordKeeper.incrementHits();
+			if (Constants.BUILD_STATS_ENABLED) {
+				if (retval != null) {
+					this.recordKeeper.incrementHits();
+				} else {
+					this.recordKeeper.incrementMisses();
+				}
 			}
 
 			return retval;
 		} else {
-
+			if (Constants.BUILD_STATS_ENABLED) {
+				this.recordKeeper.incrementMisses();
+			}
 			// Found nothing inside the cache.
 			return null;
 		}
@@ -349,14 +377,14 @@ public class CacheDecorator implements Runnable, Cache {
 		final Thread t = Thread.currentThread();
 
 		try {
-			while (tunerThread == t) {
+			while (this.tunerThread == t) {
 				// updates the cache's notion of the "current time"
 				if (Constants.ITEM_EXPIRATION_ENABLED) {
-					currentTime = System.currentTimeMillis();
+					this.currentTime = System.currentTimeMillis();
 				}
 
 				if (Constants.BUILD_STATS_ENABLED) {
-					recordKeeper.startTuneCycle();
+					this.recordKeeper.startTuneCycle();
 
 					// Adapt to mostly read or mostly write.
 					tuneCache();
@@ -369,19 +397,19 @@ public class CacheDecorator implements Runnable, Cache {
 				}
 
 				// Perform tuning and maintenance.
-				policy.performMaintenance();
+				this.policy.performMaintenance();
 
 				try {
 					// Sleep for a bit
-					Thread.sleep(sleepTime);
+					Thread.sleep(this.sleepTime);
 				} catch (final InterruptedException e) {
 					log.info(Messages.getString("CacheDecorator.tuning_thread_interrupted")); //$NON-NLS-1$
 				}
 
 				if (Constants.BUILD_STATS_ENABLED) {
 
-					if (sleepTime > 0L) {
-						recordKeeper.calculateQueriesPerSecond(sleepTime);
+					if (this.sleepTime > 0L) {
+						this.recordKeeper.calculateQueriesPerSecond(this.sleepTime);
 					}
 
 					logStatistics();
@@ -400,11 +428,11 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/**
 	 * Log some cache usage data depending on some conditions.
-	 * 
+	 *
 	 */
 	protected void logStatistics() {
-		if (sleepTime > 0L && log.isDebugEnabled()) {
-			final Object[] args = { new Long(recordKeeper.getQueriesPerSecond()) };
+		if (this.sleepTime > 0L && log.isDebugEnabled()) {
+			final Object[] args = { new Long(this.recordKeeper.getQueriesPerSecond()) };
 			log.debug(Messages.getCompoundString("CacheDecorator.query_rate", args)); //$NON-NLS-1$
 		}
 
@@ -424,12 +452,12 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/**
 	 * Specify the ManagedCache that this Decorator owns.
-	 * 
+	 *
 	 * @param cache
 	 *            The ManagedCache to set.
 	 */
 	protected void setManagedCache(final ManagedCache cache) {
-		managedCache = cache;
+		this.managedCache = cache;
 		log.debug(Messages.getString("CacheDecorator.managing_cache_with_type") + cache.getClass()); //$NON-NLS-1$
 	}
 
@@ -444,16 +472,16 @@ public class CacheDecorator implements Runnable, Cache {
 	/**
 	 * Tells the underlying ManagedCache implementation to turn on optimizations
 	 * for a mostly-read environment (if supported).
-	 * 
+	 *
 	 * @param _mostlyRead
 	 *            whether most operations are expected to be reads.
 	 */
 	public void setMostlyRead(final boolean _mostlyRead) {
 		if (Constants.BUILD_STATS_ENABLED) {
-			recordKeeper.incrementTotalOperations();
+			this.recordKeeper.incrementTotalOperations();
 		}
 
-		managedCache.setMostlyRead(_mostlyRead);
+		this.managedCache.setMostlyRead(_mostlyRead);
 	}
 
 	/**
@@ -467,34 +495,43 @@ public class CacheDecorator implements Runnable, Cache {
 	/** Shut down this cache. */
 	public void shutdown() {
 		if (log.isDebugEnabled()) {
-			log.debug(Messages.getString("CacheDecorator.shutting_down_cache") + name); //$NON-NLS-1$
+			log.debug(Messages.getString("CacheDecorator.shutting_down_cache") + this.name); //$NON-NLS-1$
 		}
 		if (Constants.BUILD_STATS_ENABLED) {
 			log.info(getEfficiencyReport());
-			recordKeeper.reset();
+			this.recordKeeper.reset();
 		}
 
-		final Thread tunerThreadToKill = tunerThread;
-		tunerThread = null;
+		final Thread tunerThreadToKill = this.tunerThread;
+		this.tunerThread = null;
 		tunerThreadToKill.interrupt();
 	}
 
 	/**
 	 * Returns the number of items in the Cache.
-	 * 
+	 *
 	 * @return number of items in the cache.
 	 */
 	public int size() {
 		if (Constants.BUILD_STATS_ENABLED) {
-			recordKeeper.incrementTotalOperations();
+			this.recordKeeper.incrementTotalOperations();
 		}
 
-		return managedCache.size();
+		return this.managedCache.size();
+	}
+
+	/**
+	 * Returns the number of items in the Cache.
+	 *
+	 * @return number of items in the cache.
+	 */
+	public int getSize() {
+		return size();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.whirlycott.cache.Cache#store(com.whirlycott.cache.Cacheable,
 	 * java.lang.Object)
 	 */
@@ -505,7 +542,7 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.whirlycott.cache.Cache#store(com.whirlycott.cache.Cacheable,
 	 * java.lang.Object, long)
 	 */
@@ -523,7 +560,7 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.whirlycott.cache.Cache#store(java.lang.Object, java.lang.Object,
 	 * long)
 	 */
@@ -533,7 +570,7 @@ public class CacheDecorator implements Runnable, Cache {
 
 	/**
 	 * All stores go through this.
-	 * 
+	 *
 	 * @param _key
 	 * @param _value
 	 * @param _expiresAfter
@@ -541,12 +578,12 @@ public class CacheDecorator implements Runnable, Cache {
 	 */
 	protected void internalStore(final Object _key, final Object _value, final long _expiresAfter) {
 		if (Constants.BUILD_STATS_ENABLED) {
-			recordKeeper.incrementTotalOperations();
+			this.recordKeeper.incrementTotalOperations();
 		}
 
 		if (_key != null && _value != null) {
-			final Item cachedValue = new Item(_value, currentTime, _expiresAfter);
-			managedCache.put(_key, cachedValue);
+			final Item cachedValue = new Item(_value, this.currentTime, _expiresAfter);
+			this.managedCache.put(_key, cachedValue);
 
 			if (Constants.BUILD_STATS_ENABLED) {
 				doAdaptiveAccounting(0);
@@ -561,10 +598,10 @@ public class CacheDecorator implements Runnable, Cache {
 		final float adaptiveRatio = getAdaptiveRatio();
 		if (adaptiveRatio > 0.5F) {
 			log.debug(Messages.getString("CacheDecorator.read_optimizations_on") + adaptiveRatio); //$NON-NLS-1$
-			managedCache.setMostlyRead(true);
+			this.managedCache.setMostlyRead(true);
 		} else {
 			log.debug(Messages.getString("CacheDecorator.read_optimizations_off") + adaptiveRatio); //$NON-NLS-1$
-			managedCache.setMostlyRead(false);
+			this.managedCache.setMostlyRead(false);
 		}
 	}
 
@@ -573,15 +610,15 @@ public class CacheDecorator implements Runnable, Cache {
 	 */
 	protected void expireItems() {
 		// Sort the entries in the cache.
-		final List entries = new LinkedList(new ConcurrentHashMap(managedCache).entrySet());
-		CollectionUtils.filter(entries, new ExpirationTimePredicate(currentTime));
+		final List entries = new LinkedList(new ConcurrentHashMap(this.managedCache).entrySet());
+		CollectionUtils.filter(entries, new ExpirationTimePredicate(this.currentTime));
 		final Object[] args = { new Integer(entries.size()) };
 		log.debug(Messages.getCompoundString("CacheDecorator.expiration_count", args)); //$NON-NLS-1$
 		for (final Iterator i = entries.iterator(); i.hasNext();) {
 			final Map.Entry entry = (Entry) i.next();
 			if (entry != null) {
 				// log.trace("Removing: " + entry.getKey());
-				managedCache.remove(entry.getKey());
+				this.managedCache.remove(entry.getKey());
 			}
 		}
 	}
