@@ -33,9 +33,16 @@ public class RecordKeeper implements Serializable {
 
 	/** The total number of cache hits. */
 	private volatile long hits;
-
+	
 	/** Lock used for the hits value. */
 	private final Object hitLock = new Object();
+
+	/** The total number of cache misses. */
+	private volatile long misses;
+
+	/** Lock used for the misses value. */
+	private final Object missLock = new Object();
+	
 
 	/** The total number of cache questions. */
 	private volatile long totalOperations;
@@ -55,13 +62,12 @@ public class RecordKeeper implements Serializable {
 	}
 
 	/**
-	 * @param hits
-	 *            The hits to set.
+	 * @return Returns the number of cache misses.
 	 */
-	public void setHits(final long hits) {
-		this.hits = hits;
+	public long getMisses() {
+		return misses;
 	}
-
+	
 	/**
 	 * @return Returns the totalOperations.
 	 */
@@ -80,6 +86,13 @@ public class RecordKeeper implements Serializable {
 	public void incrementHits() {
 		synchronized (hitLock) {
 			hits++;
+		}
+	}
+	
+	/** Increment misses. */
+	public void incrementMisses() {
+		synchronized (missLock) {
+			misses++;
 		}
 	}
 
